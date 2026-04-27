@@ -1,0 +1,105 @@
+{
+  "entities": {
+    "Match": {
+      "title": "Match",
+      "description": "Cricket match details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "team1": { "type": "string" },
+        "team1Logo": { "type": "string" },
+        "team2": { "type": "string" },
+        "team2Logo": { "type": "string" },
+        "date": { "type": "string" },
+        "venue": { "type": "string" },
+        "status": { "type": "string" },
+        "series": { "type": "string" },
+        "lineupsOut": { "type": "boolean" },
+        "dataSource": { "type": "string" }
+      },
+      "required": ["id", "team1", "team2", "date", "status"]
+    },
+    "Player": {
+      "title": "Player",
+      "description": "Player in a match squad",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "team": { "type": "string" },
+        "position": { "type": "string" },
+        "credits": { "type": "number" },
+        "playing": { "type": "boolean" },
+        "points": { "type": "number" },
+        "selectedBy": { "type": "number" }
+      },
+      "required": ["id", "name", "team", "position"]
+    },
+    "Contest": {
+      "title": "Contest",
+      "description": "Fantasy contest",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "matchId": { "type": "string" },
+        "name": { "type": "string" },
+        "prizePool": { "type": "string" },
+        "entryFee": { "type": "string" },
+        "totalSpots": { "type": "integer" },
+        "filledSpots": { "type": "integer" },
+        "type": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["id", "matchId", "name"]
+    },
+    "UserTeam": {
+      "title": "UserTeam",
+      "description": "A user's fantasy team selection",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "matchId": { "type": "string" },
+        "players": { "type": "array" },
+        "captainId": { "type": "string" },
+        "viceCaptainId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "matchId", "players"]
+    },
+    "Config": {
+      "title": "Config",
+      "description": "Global app configuration",
+      "type": "object",
+      "properties": {
+        "dataSourceMode": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/players/{playerId}": {
+      "schema": "Player",
+      "description": "Master list of all players by team"
+    },
+    "/matches/{matchId}": {
+      "schema": "Match",
+      "description": "Collection of all cricket matches"
+    },
+    "/matches/{matchId}/squad/{playerId}": {
+      "schema": "Player",
+      "description": "Squad for a specific match"
+    },
+    "/contests/{contestId}": {
+      "schema": "Contest",
+      "description": "Root level contests"
+    },
+    "/userTeams/{teamId}": {
+      "schema": "UserTeam",
+      "description": "Public teams for leaderboard"
+    },
+    "/config/global": {
+      "schema": "Config",
+      "description": "Global toggle for API/Manual mode"
+    }
+  }
+}

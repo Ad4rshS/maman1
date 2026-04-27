@@ -1,0 +1,82 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'avengers1535@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 256;
+    }
+
+    // Master Players
+    match /players/{playerId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Matches
+    match /matches/{matchId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      match /squad/{playerId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    // Contests
+    match /contests/{contestId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(contestId);
+      allow update: if isSignedIn() && (
+        // Only allow joining (adding self)
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['filledSpots', 'joinedUsers', 'joinedTeamIds']) &&
+          request.resource.data.joinedUsers.size() == resource.data.joinedUsers.size() + 1 &&
+          request.resource.data.joinedUsers.hasAll(resource.data.joinedUsers) &&
+          request.resource.data.joinedUsers.hasAll([request.auth.uid])
+        ) || isAdmin()
+      );
+      allow delete: if isAdmin();
+
+      // Entries subcollection (used by some logic, secured for admin cleanup)
+      match /entries/{entryId} {
+        allow read, write: if isAdmin();
+      }
+    }
+
+    // User Teams
+    match /userTeams/{teamId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(teamId);
+      allow update, delete: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+    }
+
+    // Config
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Admins collection
+    match /admins/{adminId} {
+      allow read: if isSignedIn() && request.auth.uid == adminId;
+      allow write: if false; // Only manageable via console
+    }
+  }
+}
